@@ -1,48 +1,48 @@
-/*receive.c */  
- 2 #include <stdio.h>   
- 3 #include <sys/types.h>   
- 4 #include <sys/ipc.h>   
- 5 #include <sys/msg.h>   
- 6 #include <errno.h>   
- 7   
- 8 #define MSGKEY 1024   
- 9   
-10 struct msgstru  
-11 {  
-12    long msgtype;  
-13    char msgtext[2048];  
-14 };  
-15   
-16 /*子进程，监听消息队列*/  
-17 void childproc(){  
-18   struct msgstru msgs;  
-19   int msgid,ret_value;  
-20   char str[512];  
-21     
-22   while(1){  
-23      msgid = msgget(MSGKEY,IPC_EXCL );/*检查消息队列是否存在 */  
-24      if(msgid < 0){  
-25         printf("msq not existed! errno=%d [%s]\n",errno,strerror(errno));  
-26         sleep(2);  
-27         continue;  
-28      }  
-29      /*接收消息队列*/  
-30      ret_value = msgrcv(msgid,&msgs,sizeof(struct msgstru),0,0);  
-31      printf("text=[%s] pid=[%d]\n",msgs.msgtext,getpid());  
-32   }  
-33   return;  
-34 }  
-35   
-36 void main()  
-37 {  
-38   int i,cpid;  
-39   
-40   /* create 5 child process */  
-41   for (i=0;i<5;i++){  
-42      cpid = fork();  
-43      if (cpid < 0)  
-44         printf("fork failed\n");  
-45      else if (cpid ==0) /*child process*/  
-46         childproc();  
-47   }  
-48 }  
+#include <unistd.h>  
+#include <stdlib.h>  
+#include <stdio.h>  
+#include <string.h>  
+#include <errno.h>  
+#include <sys/msg.h>  
+  
+struct msg_st  
+{  
+    long int msg_type;  
+    char text[BUFSIZ];  
+};  
+  
+int main()  
+{  
+    int running = 1;  
+    int msgid = -1;  
+    struct msg_st data;  
+    long int msgtype = 0; //注意1  
+  
+    //建立消息队列  
+    msgid = msgget((key_t)1234, 0666 | IPC_CREAT);  
+    if(msgid == -1)  
+    {  
+        fprintf(stderr, "msgget failed with error: %d\n", errno);  
+        exit(EXIT_FAILURE);  
+    }  
+    //从队列中获取消息，直到遇到end消息为止  
+    while(running)  
+    {  
+        if(msgrcv(msgid, (void*)&data, BUFSIZ, msgtype, 0) == -1)  
+        {  
+            fprintf(stderr, "msgrcv failed with errno: %d\n", errno);  
+            exit(EXIT_FAILURE);  
+        }  
+        printf("You wrote: %s\n",data.text);  
+        //遇到end结束  
+        if(strncmp(data.text, "end", 3) == 0)  
+            running = 0;  
+    }  
+    //删除消息队列  
+    if(msgctl(msgid, IPC_RMID, 0) == -1)  
+    {  
+        fprintf(stderr, "msgctl(IPC_RMID) failed\n");  
+        exit(EXIT_FAILURE);  
+    }  
+    exit(EXIT_SUCCESS);  
+}  
