@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/shm.h>
+#include <errno.h>
 #include "shmdata.h"
  
  struct msg_st  
@@ -17,6 +18,9 @@ int main()
 	struct shared_use_st *shared;//指向shm
 	int shmid;//共享内存标识符
 	int receive_running = 1;
+	int msgid = -1;
+	struct msg_st data; 
+	long int msgtype = 0; //注意1 
 	
 	//创建共享内存
 	shmid = shmget((key_t)1234, sizeof(struct shared_use_st), 0666|IPC_CREAT);
@@ -64,9 +68,10 @@ int main()
 		fprintf(stderr, "shmctl(IPC_RMID) failed\n");
 		exit(EXIT_FAILURE);
 	}
-	
+	sleep(3);
+
 	//建立消息队列  
-    msgid = msgget((key_t)1234, 0666 | IPC_CREAT);  
+    msgid = msgget((key_t)1234, 0644 | IPC_CREAT);  
     if(msgid == -1)  
     {  
         fprintf(stderr, "msgget failed with error: %d\n", errno);  

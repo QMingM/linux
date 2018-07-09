@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/shm.h>
+#include <errno.h>  
 #include "shmdata.h"
  
 #define MAX_TEXT 512  
@@ -51,7 +52,7 @@ int main()
 			printf("Waiting...\n");
 		}
 		//向共享内存中写入数据
-		printf("Enter some text: ");
+		printf("Enter  text: ");
 		fgets(buffer, BUFSIZ, stdin);
 		strncpy(shared->text, buffer, TEXT_SZ);
 		//写完数据，设置written使共享内存段可读
@@ -66,6 +67,7 @@ int main()
 		fprintf(stderr, "shmdt failed\n");
 		exit(EXIT_FAILURE);
 	}
+
 	sleep(2);
 	
 	 msgid = msgget((key_t)1234, 0666 | IPC_CREAT);  
@@ -79,7 +81,7 @@ int main()
     while(send_running)  
     {  
         //输入数据  
-        printf("Enter some text: ");  
+        printf("Enter text: ");  
         fgets(buffer, BUFSIZ, stdin);  
         data.msg_type = 1;    //注意2  
         strcpy(data.text, buffer);  
