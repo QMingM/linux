@@ -60,6 +60,7 @@ void echo_cli(int sock)
     
 }
 
+//写入共享内存数据
 void write_memory()
 {
 	int running = 1;
@@ -111,7 +112,7 @@ void write_memory()
 
 }
 
-
+//消息队列发送消息
 void write_msg()
 {
 	int send_running = 1;  
